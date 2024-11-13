@@ -4,17 +4,15 @@ import org.keycloak.component.ComponentModel
 import org.keycloak.credential.CredentialInput
 import org.keycloak.credential.CredentialInputUpdater
 import org.keycloak.credential.CredentialInputValidator
-import org.keycloak.models.credential.PasswordCredentialModel
+import org.keycloak.credential.CredentialModel
 import org.keycloak.credential.LegacyUserCredentialManager
 import org.keycloak.models.*
-import org.keycloak.models.credential.*
 import org.keycloak.storage.ReadOnlyException
 import org.keycloak.storage.StorageId
 import org.keycloak.storage.UserStorageProvider
 import org.keycloak.storage.adapter.AbstractUserAdapter
 import org.keycloak.storage.user.UserLookupProvider
 import java.util.*
-import java.util.stream.Stream
 
 class CustomUserStorageProvider(private val session: KeycloakSession, private val model: ComponentModel) :
         UserStorageProvider, UserLookupProvider, CredentialInputValidator, CredentialInputUpdater {
@@ -32,11 +30,11 @@ class CustomUserStorageProvider(private val session: KeycloakSession, private va
 
     // UserLookupProvider
 
-    override fun getUserByEmail(realm: RealmModel, email: String): UserModel? {
+    override fun getUserByEmail(email: String, realm: RealmModel): UserModel? {
         return null
     }
 
-    override fun getUserByUsername(realm: RealmModel, username: String): UserModel? {
+    override fun getUserByUsername(username: String, realm: RealmModel): UserModel? {
         val user = loadedUsers[username]
 
         if (user != null) {
@@ -62,11 +60,11 @@ class CustomUserStorageProvider(private val session: KeycloakSession, private va
         return null
     }
 
-    override fun getUserById(realm: RealmModel, id: String): UserModel? {
+    override fun getUserById(id: String, realm: RealmModel): UserModel? {
         val storageId = StorageId(id)
         val username = storageId.externalId
 
-        return getUserByUsername(realm, username)
+        return getUserByUsername(username, realm)
     }
 
     // CredentialInputValidator
@@ -76,7 +74,7 @@ class CustomUserStorageProvider(private val session: KeycloakSession, private va
     }
 
     override fun supportsCredentialType(credentialType: String?): Boolean {
-        return credentialType.equals(PasswordCredentialModel.TYPE)
+        return credentialType.equals(CredentialModel.PASSWORD)
     }
 
     override fun isValid(realm: RealmModel, user: UserModel, input: CredentialInput): Boolean {
@@ -89,12 +87,14 @@ class CustomUserStorageProvider(private val session: KeycloakSession, private va
         return password == input.value
     }
 
-	override fun getDisableableCredentialTypesStream(realm: RealmModel, user: UserModel): Stream<String> {
-		return Stream.empty()
-	}
+    // CredentialInputUpdater
+
+    override fun getDisableableCredentialTypes(realm: RealmModel, user: UserModel): MutableSet<String> {
+        return Collections.EMPTY_SET as MutableSet<String>
+    }
 
     override fun updateCredential(realm: RealmModel, user: UserModel, input: CredentialInput): Boolean {
-        if (input.type == PasswordCredentialModel.TYPE) {
+        if (input.type == CredentialModel.PASSWORD) {
             throw ReadOnlyException("Custom provider does not support password updating")
         }
 
