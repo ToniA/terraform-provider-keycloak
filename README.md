@@ -1,3 +1,9 @@
+# Note from ToniA
+
+I created this fork because I needed to control authentication flow and execution priorities in Keycloak 26. The original mrparkers/terraform-provider-keycloak is not maintained at the moment, and gim-/terraform-provider-keycloak had the necessary code changes, but was not published into Terraform registry.
+
+ToniA/terraform-provider-keycloak is a fork of gim-/terraform-provider-keycloak, which again is a fork of mrparkers/terraform-provider-keycloak.
+
 # terraform-provider-keycloak
 Terraform provider for [Keycloak](https://www.keycloak.org/).
 
